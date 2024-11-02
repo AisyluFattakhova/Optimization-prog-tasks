@@ -141,6 +141,10 @@ I = [[1 if i == j else 0 for j in range(n)] for i in range(len(X_0))]
 
 curr_step = 1  # Initialize iteration counter
 flag = 0  # Flag for solution status
+copyX_0 = X_0
+copyA = A
+copyc = c
+
 while True:
     # Create diagonal matrix with elements of X0
     diag = [[X_0[i] if i == j else 0 for j in range(len(X_0))] for i in range(len(X_0))]
@@ -153,6 +157,7 @@ while True:
     v = min(Cp)
 
     if v >= 0:
+        flag = 2
         break  # Stop if v is non-negative
 
     # Update step size and vector y
@@ -160,12 +165,11 @@ while True:
     y = [1.0 + (alpha_1 / v) * Cp[j] for j in range(len(Cp))]
     y_ = multiply_matrices(diag, y)
 
-    # Display current iteration results
-    print(" In iteration ", curr_step, " we have x = ", y, " ")
+
 
     # Check convergence
     if math.sqrt(sum((y_[j] - X_0[j]) ** 2 for j in range(len(y_)))) < eps:
-        flag = 2
+        flag = 0
         break
     if any(6.864552722525671e+34 < X_0[j] for j in range(len(X_0))):
         flag = 1
@@ -177,14 +181,66 @@ while True:
 
 # Output results based on solution flag
 if flag == 0:
-    print("In the last iteration", curr_step, "we have x = ", X_0)
+    print("For a = 0.5 algorithm ends on iteration ", curr_step, ".")
     print("Optimal solution found:")
     z = sum(c[i] * X_0[i] for i in range(N))
     print("z = ", z)
     for k in range(1, N + 1):
         print(f"x{k} = {X_0[k - 1]}")
 elif flag == 1:
-    print("The problem does not have a solution!")
+    print("For a = 0.5: The problem does not have a solution!")
 elif flag == 2:
-    print("The method is not applicable!")
+    print("For a = 0.5: The method is not applicable!")
 
+
+#Now we copy initial values and try algorithm with alpha_2 = 0.9
+X_0 = copyX_0
+A = copyA
+c = copyc
+curr_step = 1
+flag = 0
+while True:
+    # Create diagonal matrix with elements of X0
+    diag = [[X_0[i] if i == j else 0 for j in range(len(X_0))] for i in range(len(X_0))]
+
+    # Calculate P matrix using intermediate steps
+    A_ = multiply_matrices(A, diag)
+    P = subtract_matrices(I, multiply_matrices(
+        multiply_matrices(transpose(A_), inverse_matrix(multiply_matrices(A_, transpose(A_)))), A_))
+    Cp = multiply_matrices(multiply_matrices(P, diag), c)
+    v = min(Cp)
+
+    if v >= 0:
+        flag = 2
+        break  # Stop if v is non-negative
+
+    # Update step size and vector y
+    v = abs(v)
+    y = [1.0 + (alpha_2 / v) * Cp[j] for j in range(len(Cp))]
+    y_ = multiply_matrices(diag, y)
+
+
+    # Check convergence
+    if math.sqrt(sum((y_[j] - X_0[j]) ** 2 for j in range(len(y_)))) < eps:
+        flag = 0
+        break
+    if any(6.864552722525671e+34 < X_0[j] for j in range(len(X_0))):
+        flag = 1
+        break
+
+    # Increment step and update X0
+    curr_step += 1
+    X_0 = y_
+
+# Output results based on solution flag
+if flag == 0:
+    print("For a = 0.9 algorithm ends on iteration ", curr_step, ".")
+    print("Optimal solution found:")
+    z = sum(c[i] * X_0[i] for i in range(N))
+    print("z = ", z)
+    for k in range(1, N + 1):
+        print(f"x{k} = {X_0[k - 1]}")
+elif flag == 1:
+    print("For a = 0.9: The problem does not have a solution!")
+elif flag == 2:
+    print("For a = 0.9: The method is not applicable!")
